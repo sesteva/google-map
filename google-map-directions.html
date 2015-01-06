@@ -34,7 +34,7 @@ Fired whenever the directions service returns a result.
   @param {object} detail.response The directions service response.
 -->
 
-<polymer-element name="google-map-directions" attributes="map startAddress endAddress travelMode response libraries">
+<polymer-element name="google-map-directions" attributes="map startAddress endAddress travelMode response libraries waypoints">
   <template>
     <style>
       :host {
@@ -107,7 +107,8 @@ Fired whenever the directions service returns a result.
       observe: {
         startAddress: 'route',
         endAddress: 'route',
-        travelMode: 'route'
+        travelMode: 'route',
+        waypoints: 'route'
       },
       mapApiLoaded: function() {
         this.route();
@@ -134,7 +135,7 @@ Fired whenever the directions service returns a result.
         // Abort attempts to route if the API is not available yet or the
         // required attributes are blank.
         if (typeof google == 'undefined' || typeof google.maps == 'undefined' ||
-            !this.startAddress || !this.endAddress) {
+          !this.startAddress || !this.endAddress) {
           return;
         }
 
@@ -143,11 +144,19 @@ Fired whenever the directions service returns a result.
         if (!this.directionsService) {
           this.directionsService = new google.maps.DirectionsService();
         }
-
+        var points = [];
+        this.waypoints.forEach(function(waypoint, index){
+          var point = {
+            location: waypoint,
+            stopover: false
+          };
+          points.push(point);
+        });
         var request = {
           origin: this.startAddress,
           destination: this.endAddress,
-          travelMode: this.travelMode
+          travelMode: this.travelMode,
+          waypoints: points
         };
         this.directionsService.route(request, function(response, status) {
           if (status == google.maps.DirectionsStatus.OK) {
